@@ -1,26 +1,85 @@
 from numpy import arctan2,pi,sqrt
+import sim,simConst
+
+#? Operation modes for API
+opmblock=sim.simx_opmode_blocking
+opmstream=sim.simx_opmode_streaming
+opmbuffer=sim.simx_opmode_buffer
+opmoneshot=sim.simx_opmode_oneshot
+
+clientID=sim.simxStart('127.0.0.1',20001,True,True,5000,1)
+if clientID==-1:
+    print('Server not found!')
+    exit()
+print('Server connected!')
 
 class Ball:
-    def __init__(self,pos):
-        self.xPos=pos[0]
-        self.yPos=pos[1]
+    def __init__(self):
+        self.xPos=0
+        self.yPos=0
+    
+    def simConnect(self,center):
+        self.resC,self.center=sim.simxGetObjectHandle(clientID,center,opmblock) #? Receiving the ball in the simulation
+    
+    def simCheckConnection(self):
+        if (self.resC!=0):
+            return False
+        else:
+            return True
 
-    def setPos(self,x_new,y_new):
-        self.xPos=x_new
-        self.yPos=y_new
+    def simStreamPose(self,refPoint):
+        resRP,self.refPoint=sim.simxGetObjectHandle(clientID,refPoint,opmblock)    #? Reference point
+        if resRP!=0:
+            print('Error while setting the reference point!\nTurning off the simulation')
+            sim.simxFinish(clientID)
+            exit()
+        self.resC,self.centerPos=sim.simxGetObjectPosition(clientID,self.center,self.refPoint,opmstream)
+
+    def simGetPos(self):
+        self.resC,self.centerPos=sim.simxGetObjectPosition(clientID,self.center,self.refPoint,opmbuffer)
+        self.xPos=self.centerPos[0]
+        self.yPos=self.centerPos[1]
 
     def showInfo(self):
-        return print('xPos:{} | yPos:{}'.format(self.xPos,self.yPos))
+        print('xPos:{} | yPos:{}'.format(self.xPos,self.yPos))
 
 class Robot:
-    def __init__(self,pos,idMarker,teamMarker,leftMotor,rightMotor):
-        self.xPos=pos[0]
-        self.yPos=pos[1]
-        self.theta=arctan2(idMarker[1]-teamMarker[1],idMarker[0]-teamMarker[0])-pi/4
-        self.rMotor=rightMotor
-        self.lMotor=leftMotor
+    def __init__(self):
+        self.xPos=0         #? X position
+        self.yPos=0         #? Y position
+        self.theta=0        #? Orientation vector
+        self.rightMotor=0   #? Right motor tag
+        self.leftMotor=0    #? Left motor tag
 
-    def setPose(self,x_new,y_new,idMarker_new,teamMarker_new):
-        self.xPos=x_new
-        self.yPos=y_new
-        self.theta=arctan2(idMarker_new[1]-teamMarker_new[1],idMarker_new[0]-teamMarker_new[0])-pi/4
+    def simConnect(self,center,teamMarker,idMarker,leftMotor,rightMotor):
+        self.resC,self.center=sim.simxGetObjectHandle(clientID,center,opmblock)           #? Receiving robot parts in the simulation
+        self.resTM,self.teamMarker=sim.simxGetObjectHandle(clientID,teamMarker,opmblock)
+        self.resIDM,self.IDMarker=sim.simxGetObjectHandle(clientID,idMarker,opmblock)
+        self.resLM,self.leftMotor=sim.simxGetObjectHandle(clientID,leftMotor,opmblock)
+        self.resRM,self.rightMotor=sim.simxGetObjectHandle(clientID,rightMotor,opmblock) 
+
+    def simCheckConnection(self):
+        if (self.resC!=0 or self.resTM!=0 or self.resIDM!=0 or self.resLM!=0 or self.resRM!=0):
+            return False
+        else:
+            return True
+
+    def simStreamPose(self,refPoint):
+        resRP,self.refPoint=sim.simxGetObjectHandle(clientID,refPoint,opmblock)    #? Reference point
+        if resRP!=0:
+            print('Error while setting the reference point!\nTurning off the simulation')
+            sim.simxFinish(clientID)
+            exit()
+        self.resC,self.centerPos=sim.simxGetObjectPosition(clientID,self.center,self.refPoint,opmstream)
+        self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(clientID,self.teamMarker,self.refPoint,opmstream)
+        self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(clientID,self.IDMarker,self.refPoint,opmstream)
+
+    def simGetPose(self):
+        self.resC,self.centerPos=sim.simxGetObjectPosition(clientID,self.center,self.refPoint,opmbuffer)
+        self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(clientID,self.teamMarker,self.refPoint,opmbuffer)
+        self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(clientID,self.IDMarker,self.refPoint,opmbuffer)
+        self.xPos=self.centerPos[0]
+        self.yPos=self.centerPos[1]
+        self.theta=arctan2(self.idMarkerPos[1]-self.teamMarkerPos[1],self.idMarkerPos[0]-self.teamMarkerPos[0])-pi/4
+
+sim.simxFinish(clientID)
