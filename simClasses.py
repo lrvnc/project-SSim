@@ -18,8 +18,9 @@ class Ball:
         self.xPos=0
         self.yPos=0
     
-    def simConnect(self,center):
-        self.resC,self.center=sim.simxGetObjectHandle(clientID,center,opmblock) #? Receiving the ball in the simulation
+    def simConnect(self,clientID,center):
+        self.clientID=clientID
+        self.resC,self.center=sim.simxGetObjectHandle(self.clientID,center,opmblock) #? Receiving the ball in the simulation
     
     def simCheckConnection(self):
         if (self.resC!=0):
@@ -28,15 +29,15 @@ class Ball:
             return True
 
     def simStreamPose(self,refPoint):
-        resRP,self.refPoint=sim.simxGetObjectHandle(clientID,refPoint,opmblock)    #? Reference point
+        resRP,self.refPoint=sim.simxGetObjectHandle(self.clientID,refPoint,opmblock)    #? Reference point
         if resRP!=0:
             print('Error while setting the reference point!\nTurning off the simulation')
-            sim.simxFinish(clientID)
+            sim.simxFinish(self.clientID)
             exit()
-        self.resC,self.centerPos=sim.simxGetObjectPosition(clientID,self.center,self.refPoint,opmstream)
+        self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmstream)
 
     def simGetPos(self):
-        self.resC,self.centerPos=sim.simxGetObjectPosition(clientID,self.center,self.refPoint,opmbuffer)
+        self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
         self.xPos=self.centerPos[0]
         self.yPos=self.centerPos[1]
 
@@ -48,15 +49,16 @@ class Robot:
         self.xPos=0         #? X position
         self.yPos=0         #? Y position
         self.theta=0        #? Orientation vector
-        self.rightMotor=0   #? Right motor tag
-        self.leftMotor=0    #? Left motor tag
+        self.rightMotor=0   #? Right motor handle
+        self.leftMotor=0    #? Left motor handle
 
-    def simConnect(self,center,teamMarker,idMarker,leftMotor,rightMotor):
-        self.resC,self.center=sim.simxGetObjectHandle(clientID,center,opmblock)           #? Receiving robot parts in the simulation
-        self.resTM,self.teamMarker=sim.simxGetObjectHandle(clientID,teamMarker,opmblock)
-        self.resIDM,self.IDMarker=sim.simxGetObjectHandle(clientID,idMarker,opmblock)
-        self.resLM,self.leftMotor=sim.simxGetObjectHandle(clientID,leftMotor,opmblock)
-        self.resRM,self.rightMotor=sim.simxGetObjectHandle(clientID,rightMotor,opmblock) 
+    def simConnect(self,clientID,center,teamMarker,idMarker,leftMotor,rightMotor):
+        self.clientID=clientID
+        self.resC,self.center=sim.simxGetObjectHandle(self.clientID,center,opmblock)           #? Receiving robot parts in the simulation
+        self.resTM,self.teamMarker=sim.simxGetObjectHandle(self.clientID,teamMarker,opmblock)
+        self.resIDM,self.IDMarker=sim.simxGetObjectHandle(self.clientID,idMarker,opmblock)
+        self.resLM,self.leftMotor=sim.simxGetObjectHandle(self.clientID,leftMotor,opmblock)
+        self.resRM,self.rightMotor=sim.simxGetObjectHandle(self.clientID,rightMotor,opmblock) 
 
     def simCheckConnection(self):
         if (self.resC!=0 or self.resTM!=0 or self.resIDM!=0 or self.resLM!=0 or self.resRM!=0):
@@ -65,19 +67,19 @@ class Robot:
             return True
 
     def simStreamPose(self,refPoint):
-        resRP,self.refPoint=sim.simxGetObjectHandle(clientID,refPoint,opmblock)    #? Reference point
+        resRP,self.refPoint=sim.simxGetObjectHandle(self.clientID,refPoint,opmblock)    #? Reference point
         if resRP!=0:
             print('Error while setting the reference point!\nTurning off the simulation')
-            sim.simxFinish(clientID)
+            sim.simxFinish(self.clientID)
             exit()
-        self.resC,self.centerPos=sim.simxGetObjectPosition(clientID,self.center,self.refPoint,opmstream)
-        self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(clientID,self.teamMarker,self.refPoint,opmstream)
-        self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(clientID,self.IDMarker,self.refPoint,opmstream)
+        self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmstream)
+        self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(self.clientID,self.teamMarker,self.refPoint,opmstream)
+        self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmstream)
 
     def simGetPose(self):
-        self.resC,self.centerPos=sim.simxGetObjectPosition(clientID,self.center,self.refPoint,opmbuffer)
-        self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(clientID,self.teamMarker,self.refPoint,opmbuffer)
-        self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(clientID,self.IDMarker,self.refPoint,opmbuffer)
+        self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
+        self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(self.clientID,self.teamMarker,self.refPoint,opmbuffer)
+        self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmbuffer)
         self.xPos=self.centerPos[0]
         self.yPos=self.centerPos[1]
         self.theta=arctan2(self.idMarkerPos[1]-self.teamMarkerPos[1],self.idMarkerPos[0]-self.teamMarkerPos[0])-pi/4
