@@ -1,4 +1,4 @@
-from numpy import arctan2,pi,sqrt
+from numpy import arctan2,pi,sqrt,cos,sin,array,matmul
 import sim,simConst
 
 #? Operation modes for API
@@ -6,12 +6,6 @@ opmblock=sim.simx_opmode_blocking
 opmstream=sim.simx_opmode_streaming
 opmbuffer=sim.simx_opmode_buffer
 opmoneshot=sim.simx_opmode_oneshot
-
-clientID=sim.simxStart('127.0.0.1',20001,True,True,5000,1)
-if clientID==-1:
-    print('Server not found!')
-    exit()
-print('Server connected!')
 
 class Ball:
     def __init__(self):
@@ -21,7 +15,7 @@ class Ball:
     def simConnect(self,clientID,center):
         self.clientID=clientID
         self.resC,self.center=sim.simxGetObjectHandle(self.clientID,center,opmblock) #? Receiving the ball in the simulation
-    
+
     def simCheckConnection(self):
         if (self.resC!=0):
             return False
@@ -36,7 +30,7 @@ class Ball:
             exit()
         self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmstream)
 
-    def simGetPos(self):
+    def simGetPose(self):
         self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
         self.xPos=self.centerPos[0]
         self.yPos=self.centerPos[1]
@@ -82,6 +76,7 @@ class Robot:
         self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmbuffer)
         self.xPos=self.centerPos[0]
         self.yPos=self.centerPos[1]
-        self.theta=arctan2(self.idMarkerPos[1]-self.teamMarkerPos[1],self.idMarkerPos[0]-self.teamMarkerPos[0])-pi/4
-
-sim.simxFinish(clientID)
+        rotMatrix=array(((cos(-pi/4),-sin(-pi/4)),(sin(-pi/4),cos(-pi/4))))
+        posVec=array(((self.idMarkerPos[0]-self.teamMarkerPos[0]),(self.idMarkerPos[1]-self.teamMarkerPos[1]))).reshape(2,1)
+        rotVec=matmul(rotMatrix,posVec)
+        self.theta=arctan2(rotVec[1],rotVec[0])
