@@ -28,44 +28,38 @@ class test:
         self.yPos=yPos
         self.theta=theta
 
-robot=test(0,0,0)
-ball=test(1,1,pi/2)
-
 def gtgVecField(robot,target):
-    N=2
-    D=8
-    r=array([[target.xPos+D*cos(target.theta)],[target.yPos+D*sin(target.theta)]])
+    n=2
+    d=8
+    r=array([[target.xPos+d*cos(target.theta)],[target.yPos+d*sin(target.theta)]])
     pgAng=arctan2(target.yPos-robot.yPos,target.xPos-robot.xPos)
     prAng=arctan2(r[1]-robot.yPos,r[0]-robot.xPos)
     print(prAng*180/pi)
     grAng=arctan2(r[1]-target.yPos,r[0]-target.xPos)
     phi=arctan2(sin(prAng-pgAng),cos(prAng-pgAng)) #? Trick to mantain phi between [-pi,pi]
-    desTheta=pgAng-N*phi
+    desTheta=pgAng-n*phi
     desTheta=arctan2(sin(desTheta),cos(desTheta)) #? Trick to mantain desTheta between [-pi,pi]
     return desTheta
 
-def dist(class1,class2): #? Euclidean distance in plane
-    return sqrt((class2.xPos-class1.xPos)**2+(class2.yPos-class1.yPos)**2)
-
-def phi_h_CW(robot,target):
+def phi_h_CW(x,y,xg,yg):
     d_e=3.48 #? Constant learned from EP
-    K_r=4.15 #? Constant learned from EP
-    rho=dist(robot,target)
-    theta=arctan2(robot.yPos-target.yPos,robot.xPos-target.xPos)
+    k_r=4.15 #? Constant learned from EP
+    rho=sqrt((xg-x)**2+(yg-y)**2)
+    theta=arctan2(y-yg,x-xg)
     if rho > d_e:
-        phi=theta+pi/2*(2-(d_e+K_r/rho+K_r))
+        phi=theta+pi/2*(2-(d_e+k_r/rho+k_r))
     else:
         phi=theta+pi/2*sqrt(rho/d_e)
     phi=arctan2(sin(phi),cos(phi))
     return phi
 
-def phi_h_CCW(robot,target):
+def phi_h_CCW(x,y,xg,yg):
     d_e=3.48 #? Constant learned from EP
-    K_r=4.15 #? Constant learned from EP
-    rho=dist(robot,target)
-    theta=arctan2(robot.yPos-target.yPos,robot.xPos-target.xPos)
+    k_r=4.15 #? Constant learned from EP
+    rho=sqrt((xg-x)**2+(yg-y)**2)
+    theta=arctan2(y-yg,x-xg)
     if rho > d_e:
-        phi=theta-pi/2*(2-(d_e+K_r/rho+K_r))
+        phi=theta-pi/2*(2-(d_e+k_r/rho+k_r))
     else:
         phi=theta-pi/2*sqrt(rho/d_e)
     phi=arctan2(sin(phi),cos(phi))    
@@ -76,9 +70,30 @@ def N_h(phi):
 
 def hipVecField(robot,target):
     d_e=3.48 #? Constant learned from EP
-    K_r=4.15 #? Constant learned from EP
     yl=robot.yPos+d_e
     yr=robot.yPos-d_e
+    nCW=N_h(phi_h_CW(robot.xPos,robot.yPos+d_e,target.xPos,target.yPos))
+    nCCW=N_h(phi_h_CCW(robot.xPos,robot.yPos-d_e,target.xPos,target.yPos))
+    if (robot.yPos >= -d_e and robot.yPos < d_e):
+        phi=(yl*nCCW+yr*nCW)/2*d_e
+        phi=arctan2(phi[1],phi[0])
+    elif (robot.yPos < -d_e):
+        phi=phi_h_CW(robot.xPos,robot.yPos-d_e,target.xPos,target.yPos)
+    else:
+        phi=phi_h_CCW(robot.xPos,robot.yPos+d_e,target.xPos,target.yPos)
+    return phi
 
-robot=test(0,0,0)
-ball=test(2,0,0)
+def aoFieldVector(x,y,vx,vy,xo,yo,vxo,vxy):
+    k_o=0.12
+    sx=k_o*(vox-vx)
+    sy=k_o*(voy-vy)
+    s=sqrt(sx**2+sy**2)
+    d=sqrt((xo-x)**2+(yo-y)**2)
+    if d >= s:
+        px=xo+sx
+        py=yo+sy
+    else:
+        px=xo+(d/s)*sx
+        py=yo+(d/s)*sy
+    phi=arctan2(y-py,x-px)
+    return phi
