@@ -1,7 +1,7 @@
 import sim,simConst
 from simClasses import Ball,Robot
 from numpy import pi
-import navigation
+import behaviours
 
 clientID=sim.simxStart('127.0.0.1',20001,True,True,5000,1)
 if clientID==-1:
@@ -22,7 +22,5 @@ while True:
     ball.simGetPose()
     attacker.simGetPose()
     print(attacker.theta*180/pi)
-    v,w=navigation.navigate(attacker.theta,ball.xPos-attacker.xPos,ball.yPos-attacker.yPos)
-    navigation.simSetVel(attacker,v,w)
 
 sim.simxFinish(clientID)

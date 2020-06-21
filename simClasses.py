@@ -45,7 +45,9 @@ class Robot:
         self.theta=0        #? Orientation vector
         self.rightMotor=0   #? Right motor handle
         self.leftMotor=0    #? Left motor handle
-        self.v=0            #? Velocity
+        self.v=0            #? Velocity (cm/s)
+        self.vMax=100       #! Robot max velocity (cm/s)
+        self.rMax=300       #! Robot max rotation velocity (rad*cm/s)
 
     def simConnect(self,clientID,center,teamMarker,idMarker,leftMotor,rightMotor):
         self.clientID=clientID

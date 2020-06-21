@@ -1,13 +1,7 @@
 from numpy import array,arctan2,cos,sin,pi,sqrt,matmul,exp
 import sim,simConst
 
-#? Operation modes for API
-opmblock=sim.simx_opmode_blocking
-opmstream=sim.simx_opmode_streaming
-opmbuffer=sim.simx_opmode_buffer
-opmoneshot=sim.simx_opmode_oneshot
-
-class Nagivation:
+class Navigation:
     #% These functions are needed to develop the univector field, and can be found at the paper:
     #% "Evolutionary Univector Field-based Navigation with Collision Avoidance for Mobile Robot"
 
@@ -36,7 +30,7 @@ class Nagivation:
             phi=theta-pi/2*(2-(self.d_e+self.d_e/rho+self.d_e))
         else:
             phi=theta-pi/2*sqrt(rho/self.d_e)
-        phi=arctan2(sin(phi),cos(phi)) #? Trick to mantain phi between [-pi,pi] 
+        phi=arctan2(sin(phi),cos(phi)) #? Trick to mantain phi between [-pi,pi]
         return phi
 
     def N_h(self,phi):
@@ -47,6 +41,7 @@ class Nagivation:
 
     #% This is the hyperbolic vector field which yields us to the target position with the desired posture
     #% without avoiding any obstacle
+    #? Note: target=[x,y,desired angle of the robot in (x,y) position]'
     def hipVecField(self,robot,target):
         yl=robot.yPos+self.d_e
         yr=robot.yPos-self.d_e
