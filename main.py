@@ -15,12 +15,9 @@ attacker=Robot()
 ball.simConnect(clientID,'ball')
 attacker.simConnect(clientID,'soccerRob_pos','soccerRob_teamMarker','soccerRob_IDMarker','leftMotor','rightMotor')
 
-ball.simStreamPose('infLeft_cornor')
-attacker.simStreamPose('infLeft_cornor')
-
 while True:
-    ball.simGetPose()
-    attacker.simGetPose()
-    print(attacker.theta*180/pi)
+    ball.simGetPose('infLeft_cornor')
+    attacker.simGetPose('infLeft_cornor')
+    attacker.showInfo()
 
 sim.simxFinish(clientID)

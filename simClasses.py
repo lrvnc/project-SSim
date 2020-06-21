@@ -9,6 +9,7 @@ opmoneshot=sim.simx_opmode_oneshot
 
 class Ball:
     def __init__(self):
+        self.simStream=False
         self.xPos=0
         self.yPos=0
     
@@ -22,27 +23,29 @@ class Ball:
         else:
             return True
 
-    def simStreamPose(self,refPoint):
-        resRP,self.refPoint=sim.simxGetObjectHandle(self.clientID,refPoint,opmblock)    #? Reference point
-        if resRP!=0:
-            print('Error while setting the reference point!\nTurning off the simulation')
-            sim.simxFinish(self.clientID)
-            exit()
-        self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmstream)
-
-    def simGetPose(self):
-        self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
-        self.xPos=self.centerPos[0]
-        self.yPos=self.centerPos[1]
+    def simGetPose(self,refPoint):
+        if (not self.simStream):
+            resRP,self.refPoint=sim.simxGetObjectHandle(self.clientID,refPoint,opmblock)    #? Reference point
+            if resRP!=0:
+                print('Error while setting the reference point!\nTurning off the simulation')
+                sim.simxFinish(self.clientID)
+                exit()
+            self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmstream)
+            self.simStream=True
+        else:
+            self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
+            self.xPos=self.centerPos[0]
+            self.yPos=self.centerPos[1]
 
     def showInfo(self):
         print('xPos:{} | yPos:{}'.format(self.xPos,self.yPos))
 
 class Robot:
     def __init__(self):
+        self.simStream=False
         self.xPos=0         #? X position
         self.yPos=0         #? Y position
-        self.theta=0        #? Orientation vector
+        self.theta=0        #? Orientation
         self.rightMotor=0   #? Right motor handle
         self.leftMotor=0    #? Left motor handle
         self.v=0            #? Velocity (cm/s)
@@ -63,23 +66,38 @@ class Robot:
         else:
             return True
 
-    def simStreamPose(self,refPoint):
-        resRP,self.refPoint=sim.simxGetObjectHandle(self.clientID,refPoint,opmblock)    #? Reference point
-        if resRP!=0:
-            print('Error while setting the reference point!\nTurning off the simulation')
-            sim.simxFinish(self.clientID)
-            exit()
-        self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmstream)
-        self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(self.clientID,self.teamMarker,self.refPoint,opmstream)
-        self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmstream)
+    def simGetPose(self,refPoint):
+        if (not self.simStream):
+            resRP,self.refPoint=sim.simxGetObjectHandle(self.clientID,refPoint,opmblock)    #? Reference point
+            if resRP!=0:
+                print('Error while setting the reference point!\nTurning off the simulation')
+                sim.simxFinish(self.clientID)
+                exit()
+            self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmstream)
+            self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(self.clientID,self.teamMarker,self.refPoint,opmstream)
+            self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmstream)
+            self.simStream=True
+        else:
+            self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
+            self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(self.clientID,self.teamMarker,self.refPoint,opmbuffer)
+            self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmbuffer)
+            self.xPos=self.centerPos[0]
+            self.yPos=self.centerPos[1]
+            rotMatrix=array(((cos(-pi/4),-sin(-pi/4)),(sin(-pi/4),cos(-pi/4))))
+            posVec=array(((self.idMarkerPos[0]-self.teamMarkerPos[0]),(self.idMarkerPos[1]-self.teamMarkerPos[1]))).reshape(2,1)
+            rotVec=matmul(rotMatrix,posVec)
+            self.theta=arctan2(rotVec[1],rotVec[0])
+    
+    def showInfo(self):
+        print('xPos:{} | yPos:{} | theta: {} | velocity: {}'.format(self.xPos,self.yPos,float(self.theta),self.v))
 
-    def simGetPose(self):
-        self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
-        self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(self.clientID,self.teamMarker,self.refPoint,opmbuffer)
-        self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmbuffer)
-        self.xPos=self.centerPos[0]
-        self.yPos=self.centerPos[1]
-        rotMatrix=array(((cos(-pi/4),-sin(-pi/4)),(sin(-pi/4),cos(-pi/4))))
-        posVec=array(((self.idMarkerPos[0]-self.teamMarkerPos[0]),(self.idMarkerPos[1]-self.teamMarkerPos[1]))).reshape(2,1)
-        rotVec=matmul(rotMatrix,posVec)
-        self.theta=arctan2(rotVec[1],rotVec[0])
+class Target:
+    def __init__(self):
+        self.xPos=0         #? Desired x position
+        self.yPos=0         #? Desired y position
+        self.theta=0        #? Orientation at the desired point (x,y)
+
+    def setTarget(self,x,y,theta):
+        self.xPos=x
+        self.yPos=y
+        self.theta=theta
