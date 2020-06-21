@@ -1,4 +1,4 @@
-from numpy import array,arctan2,cos,sin,pi,sqrt,matmul
+from numpy import array,arctan2,cos,sin,pi,sqrt,matmul,exp
 import sim,simConst
 
 #? Operation modes for API
@@ -42,7 +42,7 @@ def gtgVecField(robot,target):
     return desTheta
 
 def phi_h_CW(x,y,xg,yg):
-    d_e=3.48 #? Constant learned from EP
+    d_e=5.37 #? Constant learned from EP
     k_r=4.15 #? Constant learned from EP
     rho=sqrt((xg-x)**2+(yg-y)**2)
     theta=arctan2(y-yg,x-xg)
@@ -54,7 +54,7 @@ def phi_h_CW(x,y,xg,yg):
     return phi
 
 def phi_h_CCW(x,y,xg,yg):
-    d_e=3.48 #? Constant learned from EP
+    d_e=5.37 #? Constant learned from EP
     k_r=4.15 #? Constant learned from EP
     rho=sqrt((xg-x)**2+(yg-y)**2)
     theta=arctan2(y-yg,x-xg)
@@ -69,7 +69,7 @@ def N_h(phi):
     return array([[cos(phi)],[sin(phi)]])
 
 def hipVecField(robot,target):
-    d_e=3.48 #? Constant learned from EP
+    d_e=5.37 #? Constant learned from EP
     yl=robot.yPos+d_e
     yr=robot.yPos-d_e
     nCW=N_h(phi_h_CW(robot.xPos,robot.yPos+d_e,target.xPos,target.yPos))
@@ -83,17 +83,31 @@ def hipVecField(robot,target):
         phi=phi_h_CCW(robot.xPos,robot.yPos+d_e,target.xPos,target.yPos)
     return phi
 
-def aoFieldVector(x,y,vx,vy,xo,yo,vxo,vxy):
-    k_o=0.12
-    sx=k_o*(vox-vx)
-    sy=k_o*(voy-vy)
-    s=sqrt(sx**2+sy**2)
-    d=sqrt((xo-x)**2+(yo-y)**2)
+def aoFieldVector(robot,obst):
+    k_o=0.12                                                    #? Constant learned from EP
+    sx=k_o*(obst.v*cos(obst.theta)-robot.v*cos(robot.theta))    #? Components of the shifting vector, where
+    sy=k_o*(obst.v*sin(obst.theta)-robot.v*sin(robot.theta))    #?   s=k_o*(v_obst-v_robot)
+    s=sqrt(sx**2+sy**2)                                         #? Shifiting vector length
+    d=sqrt((obst.xPos-robot.xPos)**2+(obst.yPos-robot.yPos)**2) #? Distance between the robot and the obstacle
     if d >= s:
-        px=xo+sx
-        py=yo+sy
+        px=obst.xPos+sx
+        py=obst.yPos+sy
     else:
-        px=xo+(d/s)*sx
-        py=yo+(d/s)*sy
-    phi=arctan2(y-py,x-px)
+        px=obst.xPos+(d/s)*sx
+        py=obst.yPos+(d/s)*sy
+    phi=arctan2(robot.yPos-py,robot.xPos-px)
+    return phi
+
+def gaussianFunc(r):
+    delta=4.57 #? Constant learned from EP
+    return exp(-0.5*(r/delta)**2)
+
+def univecField(robot,target,obst):
+    d_min=3.48 #? Constant learned from EP
+    d=sqrt((obst.xPos-robot.xPos)**2+(obst.yPos-robot.yPos)**2)
+    if (d <= d_min):
+        phi=aoFieldVector(robot,obst)
+    else:
+        phi=gaussianFunc(d-d_min)*aoFieldVector(robot,obst)
+        phi+=(1-gaussianFunc(d-d_min))*hipVecField(robot,target)
     return phi
