@@ -45,6 +45,7 @@ class Robot:
         self.theta=0        #? Orientation vector
         self.rightMotor=0   #? Right motor handle
         self.leftMotor=0    #? Left motor handle
+        self.v=0            #? Velocity
 
     def simConnect(self,clientID,center,teamMarker,idMarker,leftMotor,rightMotor):
         self.clientID=clientID
