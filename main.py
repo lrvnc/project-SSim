@@ -1,7 +1,6 @@
+from simClasses import Ball,Robot,Target
+from strategy import SoloFollowBall
 import sim,simConst
-from simClasses import Ball,Robot
-from numpy import pi
-import behaviours
 
 clientID=sim.simxStart('127.0.0.1',20001,True,True,5000,1)
 if clientID==-1:
@@ -9,15 +8,10 @@ if clientID==-1:
     exit()
 print('Server connected!')
 
-ball=Ball()
-attacker=Robot()
+game=SoloFollowBall()
+game.simConnect(clientID)
 
-ball.simConnect(clientID,'ball')
-attacker.simConnect(clientID,'soccerRob_pos','soccerRob_teamMarker','soccerRob_IDMarker','leftMotor','rightMotor')
-
-while True:
-    ball.simGetPose('infLeft_cornor')
-    attacker.simGetPose('infLeft_cornor')
-    attacker.showInfo()
+for i in range(50):
+    game.play()
 
 sim.simxFinish(clientID)

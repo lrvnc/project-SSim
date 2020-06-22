@@ -1,5 +1,4 @@
 from numpy import array,arctan2,cos,sin,pi,sqrt,matmul,exp
-import sim,simConst
 
 class Navigation:
     #% These functions are needed to develop the univector field, and can be found at the paper:
@@ -41,21 +40,19 @@ class Navigation:
 
     #% This is the hyperbolic vector field which yields us to the target position with the desired posture
     #% without avoiding any obstacle
-    #? Note: target=[x,y,desired angle of the robot in (x,y) position]'
     def hipVecField(self,robot,target):
         yl=robot.yPos+self.d_e
         yr=robot.yPos-self.d_e
-        nCW=N_h(phi_h_CW(robot.xPos,robot.yPos+self.d_e,target.xPos,target.yPos))
-        nCCW=N_h(phi_h_CCW(robot.xPos,robot.yPos-self.d_e,target.xPos,target.yPos))
+        nCW=self.N_h(self.phi_h_CW(robot.xPos,robot.yPos+self.d_e,target.xPos,target.yPos))
+        nCCW=self.N_h(self.phi_h_CCW(robot.xPos,robot.yPos-self.d_e,target.xPos,target.yPos))
         if (robot.yPos >= -self.d_e and robot.yPos < self.d_e):
             phi=(yl*nCCW+yr*nCW)/2*self.d_e
             phi=arctan2(phi[1],phi[0])
         elif (robot.yPos < -self.d_e):
-            phi=phi_h_CW(robot.xPos,robot.yPos-self.d_e,target.xPos,target.yPos)
+            phi=self.phi_h_CW(robot.xPos,robot.yPos-self.d_e,target.xPos,target.yPos)
         else:
-            phi=phi_h_CCW(robot.xPos,robot.yPos+self.d_e,target.xPos,target.yPos)
+            phi=self.phi_h_CCW(robot.xPos,robot.yPos+self.d_e,target.xPos,target.yPos)
         return phi
-
 
     #% This is the vector field which let us avoid a moving obstacle, but don't yields us to the target position
     def aoFieldVector(self,robot,obst):
@@ -77,8 +74,8 @@ class Navigation:
     def univecField(self,robot,target,obst):
         d=sqrt((obst.xPos-robot.xPos)**2+(obst.yPos-robot.yPos)**2)
         if (d <= self.d_min):
-            phi=aoFieldVector(robot,obst)
+            phi=self.aoFieldVector(robot,obst)
         else:
-            phi=gaussianFunc(d-self.d_min)*aoFieldVector(robot,obst)
-            phi+=(1-gaussianFunc(d-self.d_min))*hipVecField(robot,target)
+            phi=self.gaussianFunc(d-self.d_min)*self.aoFieldVector(robot,obst)
+            phi+=(1-self.gaussianFunc(d-self.d_min))*self.hipVecField(robot,target)
         return phi

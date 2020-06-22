@@ -7,6 +7,7 @@ opmstream=sim.simx_opmode_streaming
 opmbuffer=sim.simx_opmode_buffer
 opmoneshot=sim.simx_opmode_oneshot
 
+#! Units: cm, rad, s
 class Ball:
     def __init__(self):
         self.simStream=False
@@ -34,11 +35,11 @@ class Ball:
             self.simStream=True
         else:
             self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
-            self.xPos=self.centerPos[0]
-            self.yPos=self.centerPos[1]
+            self.xPos=100*self.centerPos[0]
+            self.yPos=100*self.centerPos[1]
 
     def showInfo(self):
-        print('xPos:{} | yPos:{}'.format(self.xPos,self.yPos))
+        print('xPos: {:.2f} | yPos: {:.2f}'.format(self.xPos,self.yPos))
 
 class Robot:
     def __init__(self):
@@ -51,6 +52,7 @@ class Robot:
         self.v=0            #? Velocity (cm/s)
         self.vMax=100       #! Robot max velocity (cm/s)
         self.rMax=300       #! Robot max rotation velocity (rad*cm/s)
+        self.L=7.5          #? Base length of the robot (cm)
 
     def simConnect(self,clientID,center,teamMarker,idMarker,leftMotor,rightMotor):
         self.clientID=clientID
@@ -81,15 +83,20 @@ class Robot:
             self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
             self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(self.clientID,self.teamMarker,self.refPoint,opmbuffer)
             self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmbuffer)
-            self.xPos=self.centerPos[0]
-            self.yPos=self.centerPos[1]
+            self.xPos=100*self.centerPos[0]
+            self.yPos=100*self.centerPos[1]
             rotMatrix=array(((cos(-pi/4),-sin(-pi/4)),(sin(-pi/4),cos(-pi/4))))
             posVec=array(((self.idMarkerPos[0]-self.teamMarkerPos[0]),(self.idMarkerPos[1]-self.teamMarkerPos[1]))).reshape(2,1)
             rotVec=matmul(rotMatrix,posVec)
             self.theta=arctan2(rotVec[1],rotVec[0])
+        
+    def simSetVel(self,v,w):
+        self.v=v
+        self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,v+0.5*self.L*w,opmoneshot)
+        self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,v-0.5*self.L*w,opmoneshot)
     
     def showInfo(self):
-        print('xPos:{} | yPos:{} | theta: {} | velocity: {}'.format(self.xPos,self.yPos,float(self.theta),self.v))
+        print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f} | velocity: {:.2f}'.format(self.xPos,self.yPos,float(self.theta),self.v))
 
 class Target:
     def __init__(self):
@@ -101,3 +108,6 @@ class Target:
         self.xPos=x
         self.yPos=y
         self.theta=theta
+
+    def showInfo(self):
+        print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f}'.format(self.xPos,self.yPos,float(self.theta)))
