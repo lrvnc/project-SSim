@@ -1,3 +1,4 @@
+from numpy import pi
 from simClasses import Ball,Robot,Target
 from execution import Controllers
 
@@ -26,4 +27,4 @@ class SoloFollowBall:
         self.ball.simGetPose('infLeft_cornor')
         self.target.setTarget(self.ball.xPos,self.ball.yPos,0)
         v,w=self.ctrl.gtg_controller(self.redRob,self.target)
-        self.target.showInfo()
+        self.redRob.simSetVel(v,w)

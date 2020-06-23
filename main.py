@@ -11,7 +11,7 @@ print('Server connected!')
 game=SoloFollowBall()
 game.simConnect(clientID)
 
-for i in range(50):
+while True:
     game.play()
 
 sim.simxFinish(clientID)

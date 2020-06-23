@@ -1,6 +1,6 @@
 from numpy import array,arctan2,cos,sin,pi,sqrt,matmul,exp
 
-class Navigation:
+class Univector:
     #% These functions are needed to develop the univector field, and can be found at the paper:
     #% "Evolutionary Univector Field-based Navigation with Collision Avoidance for Mobile Robot"
 
@@ -13,22 +13,22 @@ class Navigation:
         self.d_min=3.48
     
     def phi_h_CW(self,x,y,xg,yg):
-        rho=sqrt((xg-x)**2+(yg-y)**2)
+        rho=sqrt((x-xg)**2+(y-yg)**2)
         theta=arctan2(y-yg,x-xg)
         if rho > self.d_e:
-            phi=theta+pi/2*(2-(self.d_e+self.d_e/rho+self.d_e))
+            phi=theta+0.5*pi*(2-((self.d_e+self.k_r)/(rho+self.k_r)))
         else:
-            phi=theta+pi/2*sqrt(rho/self.d_e)
+            phi=theta+0.5*pi*sqrt(rho/self.d_e)
         phi=arctan2(sin(phi),cos(phi)) #? Trick to mantain phi between [-pi,pi]
         return phi
 
     def phi_h_CCW(self,x,y,xg,yg):
-        rho=sqrt((xg-x)**2+(yg-y)**2)
+        rho=sqrt((x-xg)**2+(y-yg)**2)
         theta=arctan2(y-yg,x-xg)
         if rho > self.d_e:
-            phi=theta-pi/2*(2-(self.d_e+self.d_e/rho+self.d_e))
+            phi=theta-0.5*pi*(2-((self.d_e+self.k_r)/(rho+self.k_r)))
         else:
-            phi=theta-pi/2*sqrt(rho/self.d_e)
+            phi=theta-0.5*pi*sqrt(rho/self.d_e)
         phi=arctan2(sin(phi),cos(phi)) #? Trick to mantain phi between [-pi,pi]
         return phi
 
@@ -46,7 +46,7 @@ class Navigation:
         nCW=self.N_h(self.phi_h_CW(robot.xPos,robot.yPos+self.d_e,target.xPos,target.yPos))
         nCCW=self.N_h(self.phi_h_CCW(robot.xPos,robot.yPos-self.d_e,target.xPos,target.yPos))
         if (robot.yPos >= -self.d_e and robot.yPos < self.d_e):
-            phi=(yl*nCCW+yr*nCW)/2*self.d_e
+            phi=0.5*(yl*nCCW+yr*nCW)/self.d_e
             phi=arctan2(phi[1],phi[0])
         elif (robot.yPos < -self.d_e):
             phi=self.phi_h_CW(robot.xPos,robot.yPos-self.d_e,target.xPos,target.yPos)
@@ -78,4 +78,15 @@ class Navigation:
         else:
             phi=self.gaussianFunc(d-self.d_min)*self.aoFieldVector(robot,obst)
             phi+=(1-self.gaussianFunc(d-self.d_min))*self.hipVecField(robot,target)
+        return phi
+
+    def nVecField(self,robot,target):
+        n=8
+        d=2
+        rx=target.xPos+d*cos(target.theta)
+        ry=target.yPos+d*sin(target.theta)
+        pgAng=arctan2(target.yPos-robot.yPos,target.xPos-robot.xPos)
+        prAng=arctan2(ry-robot.yPos,rx-robot.xPos)
+        alpha=arctan2(sin(prAng-pgAng),cos(prAng-pgAng))
+        phi=arctan2(sin(pgAng-n*alpha),cos(pgAng-n*alpha))
         return phi

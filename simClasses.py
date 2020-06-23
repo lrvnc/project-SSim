@@ -44,15 +44,16 @@ class Ball:
 class Robot:
     def __init__(self):
         self.simStream=False
-        self.xPos=0         #? X position
-        self.yPos=0         #? Y position
-        self.theta=0        #? Orientation
-        self.rightMotor=0   #? Right motor handle
-        self.leftMotor=0    #? Left motor handle
-        self.v=0            #? Velocity (cm/s)
-        self.vMax=100       #! Robot max velocity (cm/s)
-        self.rMax=300       #! Robot max rotation velocity (rad*cm/s)
-        self.L=7.5          #? Base length of the robot (cm)
+        self.xPos=0             #? X position
+        self.yPos=0             #? Y position
+        self.theta=0            #? Orientation
+        self.rightMotor=0       #? Right motor handle
+        self.leftMotor=0        #? Left motor handle
+        self.v=0                #? Velocity (cm/s)
+        self.vMax=50            #! Robot max velocity (cm/s)
+        self.rMax=3*self.vMax   #! Robot max rotation velocity (rad*cm/s)
+        self.L=8                #? Base length of the robot (cm)
+        self.R=3.4              #? Wheel radius (cm)
 
     def simConnect(self,clientID,center,teamMarker,idMarker,leftMotor,rightMotor):
         self.clientID=clientID
@@ -92,8 +93,8 @@ class Robot:
         
     def simSetVel(self,v,w):
         self.v=v
-        self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,v+0.5*self.L*w,opmoneshot)
-        self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,v-0.5*self.L*w,opmoneshot)
+        self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,(v+0.5*self.L*w)/self.R,opmoneshot)
+        self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,(v-0.5*self.L*w)/self.R,opmoneshot)
     
     def showInfo(self):
         print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f} | velocity: {:.2f}'.format(self.xPos,self.yPos,float(self.theta),self.v))
