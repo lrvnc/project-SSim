@@ -1,5 +1,5 @@
 from numpy import pi
-from simClasses import Ball,Robot,Target
+from simClasses import Ball,Robot,Target,Obstacle
 from execution import Controllers
 
 class SoloFollowBall:
@@ -7,6 +7,7 @@ class SoloFollowBall:
         self.ball=Ball()
         self.redRob=Robot()
         self.target=Target()
+        self.obst=Obstacle()
         self.ctrl=Controllers()
     
     def simConnect(self,clientID):
@@ -25,6 +26,7 @@ class SoloFollowBall:
     def play(self):
         self.redRob.simGetPose('infLeft_cornor')
         self.ball.simGetPose('infLeft_cornor')
-        self.target.setTarget(self.ball.xPos,self.ball.yPos,0)
-        v,w=self.ctrl.gtg_controller(self.redRob,self.target)
+        self.target.setTarget(self.ball.xPos,self.ball.yPos,-pi/2)
+        self.obst.setObst(75,65,0,0)
+        v,w=self.ctrl.mixed_controller(self.redRob,self.target,self.obst)
         self.redRob.simSetVel(v,w)

@@ -54,8 +54,21 @@ class Univector:
             phi=self.phi_h_CCW(robot.xPos,robot.yPos+self.d_e,target.xPos,target.yPos)
         return phi
 
+    #% This is the 'N_Posture' vector field which yields us to the target position with the desired posture
+    #% without avoiding any obstacle
+    def nVecField(self,robot,target):
+        n=8
+        d=2
+        rx=target.xPos+d*cos(target.theta)
+        ry=target.yPos+d*sin(target.theta)
+        pgAng=arctan2(target.yPos-robot.yPos,target.xPos-robot.xPos)
+        prAng=arctan2(ry-robot.yPos,rx-robot.xPos)
+        alpha=arctan2(sin(prAng-pgAng),cos(prAng-pgAng))
+        phi=arctan2(sin(pgAng-n*alpha),cos(pgAng-n*alpha))
+        return phi
+
     #% This is the vector field which let us avoid a moving obstacle, but don't yields us to the target position
-    def aoFieldVector(self,robot,obst):
+    def aoVecField(self,robot,obst):
         sx=self.k_o*(obst.v*cos(obst.theta)-robot.v*cos(robot.theta))   #? Components of the shifting vector, where
         sy=self.k_o*(obst.v*sin(obst.theta)-robot.v*sin(robot.theta))   #? S=k_o*(V_obst-V_robot)
         s=sqrt(sx**2+sy**2)
@@ -69,24 +82,24 @@ class Univector:
         phi=arctan2(robot.yPos-py,robot.xPos-px)
         return phi
     
-    #% This is the composed vector field, which mix both move-to-target and avoid-obstacle vector field
+    #% This is the composed vector field, which mix both move-to-target (hyperbolic) and avoid-obstacle vector field
     #% using a gaussian function
-    def univecField(self,robot,target,obst):
+    def univecField_H(self,robot,target,obst):
         d=sqrt((obst.xPos-robot.xPos)**2+(obst.yPos-robot.yPos)**2)
         if (d <= self.d_min):
-            phi=self.aoFieldVector(robot,obst)
+            phi=self.aoVecField(robot,obst)
         else:
-            phi=self.gaussianFunc(d-self.d_min)*self.aoFieldVector(robot,obst)
+            phi=self.gaussianFunc(d-self.d_min)*self.aoVecField(robot,obst)
             phi+=(1-self.gaussianFunc(d-self.d_min))*self.hipVecField(robot,target)
         return phi
 
-    def nVecField(self,robot,target):
-        n=8
-        d=2
-        rx=target.xPos+d*cos(target.theta)
-        ry=target.yPos+d*sin(target.theta)
-        pgAng=arctan2(target.yPos-robot.yPos,target.xPos-robot.xPos)
-        prAng=arctan2(ry-robot.yPos,rx-robot.xPos)
-        alpha=arctan2(sin(prAng-pgAng),cos(prAng-pgAng))
-        phi=arctan2(sin(pgAng-n*alpha),cos(pgAng-n*alpha))
+    #% This is the composed vector field, which mix both move-to-target ('N_Posture') and avoid-obstacle vector field
+    #% using a gaussian function
+    def univecField_N(self,robot,target,obst):
+        d=sqrt((obst.xPos-robot.xPos)**2+(obst.yPos-robot.yPos)**2)
+        if (d <= self.d_min):
+            phi=self.aoVecField(robot,obst)
+        else:
+            phi=self.gaussianFunc(d-self.d_min)*self.aoVecField(robot,obst)
+            phi+=(1-self.gaussianFunc(d-self.d_min))*self.nVecField(robot,target)
         return phi

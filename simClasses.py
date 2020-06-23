@@ -50,7 +50,7 @@ class Robot:
         self.rightMotor=0       #? Right motor handle
         self.leftMotor=0        #? Left motor handle
         self.v=0                #? Velocity (cm/s)
-        self.vMax=50            #! Robot max velocity (cm/s)
+        self.vMax=30            #! Robot max velocity (cm/s)
         self.rMax=3*self.vMax   #! Robot max rotation velocity (rad*cm/s)
         self.L=8                #? Base length of the robot (cm)
         self.R=3.4              #? Wheel radius (cm)
@@ -112,3 +112,19 @@ class Target:
 
     def showInfo(self):
         print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f}'.format(self.xPos,self.yPos,float(self.theta)))
+
+class Obstacle:
+    def __init__(self):
+        self.xPos=0         #? Obstacle x position
+        self.yPos=0         #? Obstacle y position
+        self.v=0            #? Obstacle velocity (cm/s)
+        self.theta=0        #? OBstacle orientation
+
+    def setObst(self,x,y,v,theta):
+        self.xPos=x
+        self.yPos=y
+        self.v=v
+        self.theta=theta
+
+    def showInfo(self):
+        print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f} | velocity: {:.2f}'.format(self.xPos,self.yPos,float(self.theta),self.v))
