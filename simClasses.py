@@ -1,4 +1,4 @@
-from numpy import arctan2,pi,sqrt,cos,sin,array,matmul
+from numpy import arctan2,pi,sqrt,cos,sin,array,matmul,amin,where
 import sim,simConst
 
 #? Operation modes for API
@@ -8,12 +8,42 @@ opmbuffer=sim.simx_opmode_buffer
 opmoneshot=sim.simx_opmode_oneshot
 
 #! Units: cm, rad, s
+class Target:
+    def __init__(self):
+        self.xPos=0         #? Desired x position
+        self.yPos=0         #? Desired y position
+        self.theta=0        #? Orientation at the desired point (x,y)
+
+    def setTarget(self,x,y,theta):
+        self.xPos=x
+        self.yPos=y
+        self.theta=theta
+
+    def showInfo(self):
+        print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f}'.format(self.xPos,self.yPos,float(self.theta)))
+
+class Obstacle:
+    def __init__(self):
+        self.xPos=0         #? Obstacle x position
+        self.yPos=0         #? Obstacle y position
+        self.v=0            #? Obstacle velocity (cm/s)
+        self.theta=0        #? OBstacle orientation
+
+    def setObst(self,x,y,v,theta):
+        self.xPos=x
+        self.yPos=y
+        self.v=v
+        self.theta=theta
+
+    def showInfo(self):
+        print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f} | velocity: {:.2f}'.format(self.xPos,self.yPos,float(self.theta),self.v))
+
 class Ball:
     def __init__(self):
         self.simStream=False
         self.xPos=0
         self.yPos=0
-    
+
     def simConnect(self,clientID,center):
         self.clientID=clientID
         self.resC,self.center=sim.simxGetObjectHandle(self.clientID,center,opmblock) #? Receiving the ball in the simulation
@@ -54,6 +84,12 @@ class Robot:
         self.rMax=3*self.vMax   #! Robot max rotation velocity (rad*cm/s)
         self.L=8                #? Base length of the robot (cm)
         self.R=3.4              #? Wheel radius (cm)
+        self.obst=Obstacle()    #? Defines the robot obstacle
+        self.target=Target()    #? Defines the robot target
+
+    #% This function calculate the distance between the robot and an object
+    def dist(self,obj):
+        return sqrt((self.xPos-obj.xPos)**2+(self.yPos-obj.yPos)**2)
 
     def simConnect(self,clientID,center,teamMarker,idMarker,leftMotor,rightMotor):
         self.clientID=clientID
@@ -90,41 +126,35 @@ class Robot:
             posVec=array(((self.idMarkerPos[0]-self.teamMarkerPos[0]),(self.idMarkerPos[1]-self.teamMarkerPos[1]))).reshape(2,1)
             rotVec=matmul(rotMatrix,posVec)
             self.theta=arctan2(rotVec[1],rotVec[0])
-        
+  
     def simSetVel(self,v,w):
         self.v=v
         self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,(v+0.5*self.L*w)/self.R,opmoneshot)
         self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,(v-0.5*self.L*w)/self.R,opmoneshot)
     
-    def showInfo(self):
-        print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f} | velocity: {:.2f}'.format(self.xPos,self.yPos,float(self.theta),self.v))
+    #% This function verify which is the closest obstacle and sets it as the current obstacle to avoid
+    def updateObst(self,friend1,friend2,enemy1,enemy2,enemy3):
+        d=array([[self.dist(friend1)],
+                 [self.dist(friend2)],
+                 [self.dist(enemy1)],
+                 [self.dist(enemy2)],
+                 [self.dist(enemy3)]])
+        index=where(d==amin(d))
+        if index[0][0]==0:
+            self.obst.setObst(friend1.xPos,friend1.yPos,0,0)
+        elif index[0][0]==1:
+            self.obst.setObst(friend2.xPos,friend2.yPos,0,0)
+        elif index[0][0]==2:
+            self.obst.setObst(enemy1.xPos,enemy1.yPos,0,0)
+        elif index[0][0]==3:
+            self.obst.setObst(enemy2.xPos,enemy2.yPos,0,0)
+        else:
+            self.obst.setObst(enemy3.xPos,enemy3.yPos,0,0)
+        print('Obstáculo: ',index[0][0])
 
-class Target:
-    def __init__(self):
-        self.xPos=0         #? Desired x position
-        self.yPos=0         #? Desired y position
-        self.theta=0        #? Orientation at the desired point (x,y)
-
-    def setTarget(self,x,y,theta):
-        self.xPos=x
-        self.yPos=y
-        self.theta=theta
-
-    def showInfo(self):
-        print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f}'.format(self.xPos,self.yPos,float(self.theta)))
-
-class Obstacle:
-    def __init__(self):
-        self.xPos=0         #? Obstacle x position
-        self.yPos=0         #? Obstacle y position
-        self.v=0            #? Obstacle velocity (cm/s)
-        self.theta=0        #? OBstacle orientation
-
-    def setObst(self,x,y,v,theta):
-        self.xPos=x
-        self.yPos=y
-        self.v=v
-        self.theta=theta
+   #% This update the current target of the robot
+    def updateTarget(self,x,y,theta):
+        self.target.setTarget(x,y,theta)
 
     def showInfo(self):
         print('xPos: {:.2f} | yPos: {:.2f} | theta: {:.2f} | velocity: {:.2f}'.format(self.xPos,self.yPos,float(self.theta),self.v))
