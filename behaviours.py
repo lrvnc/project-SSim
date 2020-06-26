@@ -11,7 +11,7 @@ class Univector:
         self.delta=4.57
         self.k_o=0.12
         self.d_min=3.48
-    
+
     def phi_h_CW(self,x,y,xg,yg):
         rho=sqrt((x-xg)**2+(y-yg)**2)
         theta=arctan2(y-yg,x-xg)
@@ -72,7 +72,7 @@ class Univector:
         sx=self.k_o*(obst.v*cos(obst.theta)-robot.v*cos(robot.theta))   #? Components of the shifting vector, where
         sy=self.k_o*(obst.v*sin(obst.theta)-robot.v*sin(robot.theta))   #? S=k_o*(V_obst-V_robot)
         s=sqrt(sx**2+sy**2)
-        d=sqrt((obst.xPos-robot.xPos)**2+(obst.yPos-robot.yPos)**2)
+        d=robot.dist(obst)
         if d >= s:
             px=obst.xPos+sx
             py=obst.yPos+sy
@@ -81,11 +81,11 @@ class Univector:
             py=obst.yPos+(d/s)*sy
         phi=arctan2(robot.yPos-py,robot.xPos-px)
         return phi
-    
+
     #% This is the composed vector field, which mix both move-to-target (hyperbolic) and avoid-obstacle vector field
     #% using a gaussian function
     def univecField_H(self,robot,target,obst):
-        d=sqrt((obst.xPos-robot.xPos)**2+(obst.yPos-robot.yPos)**2)
+        d=robot.dist(obst)
         if (d <= self.d_min):
             phi=self.aoVecField(robot,obst)
         else:
@@ -96,7 +96,7 @@ class Univector:
     #% This is the composed vector field, which mix both move-to-target ('N_Posture') and avoid-obstacle vector field
     #% using a gaussian function
     def univecField_N(self,robot,target,obst):
-        d=sqrt((obst.xPos-robot.xPos)**2+(obst.yPos-robot.yPos)**2)
+        d=robot.dist(obst)
         if (d <= self.d_min):
             phi=self.aoVecField(robot,obst)
         else:

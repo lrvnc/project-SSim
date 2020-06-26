@@ -1,15 +1,12 @@
 from numpy import pi
 from simClasses import Ball,Robot,Target,Obstacle
-from execution import Controllers
+from execution import control
 
 class SoloFollowBall:
     def __init__(self):
         self.ball=Ball()
         self.redRob=Robot()
-        self.target=Target()
-        self.obst=Obstacle()
-        self.ctrl=Controllers()
-    
+
     def simConnect(self,clientID):
         self.clientID=clientID
         self.ball.simConnect(self.clientID,'ball')
@@ -22,13 +19,12 @@ class SoloFollowBall:
             print('Ball ready to play!')
         else:
             print('Ball not found...')
-    
+
     def play(self):
         self.redRob.simGetPose('infLeft_cornor')
         self.ball.simGetPose('infLeft_cornor')
-        self.target.setTarget(self.ball.xPos,self.ball.yPos,-pi/2)
-        self.obst.setObst(75,65,0,0)
-        v,w=self.ctrl.mixed_controller(self.redRob,self.target,self.obst)
+        self.redRob.target.update(self.ball.xPos,self.ball.yPos,-pi/2)
+        v,w=self.ctrl.gtgN_controller(self.redRob,self.redRob.target)
         self.redRob.simSetVel(v,w)
 
 class SoloStaticObstacles:
@@ -40,9 +36,7 @@ class SoloStaticObstacles:
         self.cylinder3=Ball()
         self.cylinder4=Ball()
         self.cylinder5=Ball()
-        self.target=Target()
-        self.ctrl=Controllers()
-    
+
     def simConnect(self,clientID):
         self.clientID=clientID
         self.ball.simConnect(self.clientID,'ball')
@@ -80,7 +74,7 @@ class SoloStaticObstacles:
             print('Cyl5 ready to play!')
         else:
             print('Cyl5 not found...')
-    
+
     def play(self):
         self.redRob.simGetPose('infLeft_cornor')
         self.ball.simGetPose('infLeft_cornor')
@@ -89,7 +83,7 @@ class SoloStaticObstacles:
         self.cylinder3.simGetPose('infLeft_cornor')
         self.cylinder4.simGetPose('infLeft_cornor')
         self.cylinder5.simGetPose('infLeft_cornor')
-        self.redRob.updateTarget(self.ball.xPos,self.ball.yPos,pi/2)
-        self.redRob.updateObst(self.cylinder1,self.cylinder2,self.cylinder3,self.cylinder4,self.cylinder5)
-        v,w=self.ctrl.mixed_controller(self.redRob,self.redRob.target,self.redRob.obst)
+        self.redRob.target.update(self.ball.xPos,self.ball.yPos,pi/2)
+        self.redRob.obst.update(self.redRob,self.cylinder1,self.cylinder2,self.cylinder3,self.cylinder4,self.cylinder5)
+        v,w=control(self.redRob,self.redRob.target,self.redRob.obst,True)
         self.redRob.simSetVel(v,w)
