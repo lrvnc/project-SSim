@@ -1,4 +1,4 @@
-from numpy import cos,sin,arctan2,sqrt,sign,pi
+from numpy import cos,sin,arctan2,sqrt,sign,pi,delete,append,array
 from behaviours import Univector
 
 #% Function to approximate phi_v
@@ -40,6 +40,10 @@ def univec(robot,target,obst=None,avoidObst=True,n=8,d=2):
         v2=(sqrt(k_w**2+4*robot.rMax*abs(phi_v))-k_w*sqrt(abs(theta_e)))/(2*abs(phi_v)+dl)
         v=min(v1,v2,robot.vMax)
         w=v*phi_v+k_w*sign(theta_e)*sqrt(abs(theta_e))
+        #? Some code to store the past position, orientation and velocity
+        robot.v=v
+        robot.pastPose=delete(robot.pastPose,0,1) #? Deleting the first column
+        robot.pastPose=append(robot.pastPose,array([[round(robot.xPos)],[round(robot.yPos)],[round(float(robot.theta))],[round(float(v))]]),1)
         return v,w
     
     #% Navigation: Go-to-Goal Vector Field
@@ -52,4 +56,8 @@ def univec(robot,target,obst=None,avoidObst=True,n=8,d=2):
         v2=(sqrt(k_w**2+4*robot.rMax*abs(phi_v))-k_w*sqrt(abs(theta_e)))/(2*abs(phi_v)+dl)
         v=min(v1,v2,robot.vMax)
         w=v*phi_v+k_w*sign(theta_e)*sqrt(abs(theta_e))
+        #? Some code to store the past position, orientation and velocity
+        robot.v=v
+        robot.pastPose=delete(robot.pastPose,0,1) #? Deleting the first column
+        robot.pastPose=append(robot.pastPose,array([[round(robot.xPos)],[round(robot.yPos)],[round(float(robot.theta))],[round(float(v))]]),1)
         return v,w

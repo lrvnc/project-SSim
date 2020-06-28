@@ -11,6 +11,40 @@ class Univector:
         self.delta=4.57
         self.k_o=0.12
         self.d_min=3.48
+    
+    def rotMatrix(self,alpha):
+        return array(((cos(alpha),-sin(alpha)),(sin(alpha),cos(alpha))))
+        
+    def whichFace(self,robot,target):
+        pgVec=array([[target.xPos-robot.xPos],[target.yPos-robot.yPos]]).reshape(2,1) #? Vector between the robot and the target
+        pgVec=pgVec/sqrt(pgVec[0]**2+pgVec[1]**2) #? Normalizing pgVec
+        mrkVec=100*array(((robot.idMarkerPos[0]-robot.teamMarkerPos[0]),(robot.idMarkerPos[1]-robot.teamMarkerPos[1]))).reshape(2,1) #? Vector between the markers
+        mrkVec=mrkVec/sqrt(mrkVec[0]**2+mrkVec[1]**2) #? Normalizing mrkVec
+
+        if robot.face==1:
+            rotM=self.rotMatrix(-pi/4)
+            headVec=matmul(rotM,mrkVec)
+            dotProd=headVec[0]*pgVec[0]+headVec[1]*pgVec[1] #? Dot product between headVec and pgVec
+            if dotProd >= -0.42:
+                robot.theta=arctan2(headVec[1],headVec[0])
+                robot.face=1
+            else:
+                rotM=self.rotMatrix(pi)
+                headVec=matmul(rotM,headVec)
+                robot.theta=arctan2(headVec[1],headVec[0])
+                robot.face=-1
+        else:
+            rotM=self.rotMatrix(3*pi/4)
+            headVec=matmul(rotM,mrkVec)
+            dotProd=headVec[0]*pgVec[0]+headVec[1]*pgVec[1] #? Dot product between headVec and pgVec
+            if dotProd >= -0.42:
+                robot.theta=arctan2(headVec[1],headVec[0])
+                robot.face=-1
+            else:
+                rotM=self.rotMatrix(pi)
+                headVec=matmul(rotM,headVec)
+                robot.theta=arctan2(headVec[1],headVec[0])
+                robot.face=1
 
     def phi_h_CW(self,x,y,xg,yg):
         rho=sqrt((x-xg)**2+(y-yg)**2)
@@ -57,6 +91,7 @@ class Univector:
     #% This is the 'N_Posture' vector field which yields us to the target position with the desired posture
     #% without avoiding any obstacle
     def nVecField(self,robot,target,n=8,d=2):
+        self.whichFace(robot,target)
         rx=target.xPos+d*cos(target.theta)
         ry=target.yPos+d*sin(target.theta)
         pgAng=arctan2(target.yPos-robot.yPos,target.xPos-robot.xPos)
@@ -94,6 +129,7 @@ class Univector:
     #% This is the composed vector field, which mix both move-to-target ('N_Posture') and avoid-obstacle vector field
     #% using a gaussian function
     def univecField_N(self,robot,target,obst,n=8,d=2):
+        self.whichFace(robot,target)
         d=robot.dist(obst)
         if (d <= self.d_min):
             phi=self.aoVecField(robot,obst)

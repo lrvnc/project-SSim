@@ -1,4 +1,4 @@
-from numpy import arctan2,pi,sqrt,cos,sin,array,matmul,amin,where,zeros,delete,append
+from numpy import arctan2,pi,sqrt,cos,sin,array,matmul,amin,where,zeros
 import sim,simConst
 
 #? Operation modes for API
@@ -106,19 +106,20 @@ class Ball:
 class Robot:
     def __init__(self):
         self.simStream=False
-        self.xPos=0                         #? X position
-        self.yPos=0                         #? Y position
-        self.theta=0                        #? Orientation
-        self.rightMotor=0                   #? Right motor handle
-        self.leftMotor=0                    #? Left motor handle
-        self.v=0                            #? Velocity (cm/s)
-        self.vMax=30                        #! Robot max velocity (cm/s)
-        self.rMax=3*self.vMax               #! Robot max rotation velocity (rad*cm/s)
-        self.L=8                            #? Base length of the robot (cm)
-        self.R=3.4                          #? Wheel radius (cm)
-        self.obst=Obstacle()                #? Defines the robot obstacle
-        self.target=Target()                #? Defines the robot target
-        self.pastPose=zeros(9).reshape(3,3) #? Stores the last 3 positions (x,y) and orientation
+        self.face=1                          #? Defines the current face of the robot
+        self.xPos=0                          #? X position
+        self.yPos=0                          #? Y position
+        self.theta=0                         #? Orientation
+        self.rightMotor=0                    #? Right motor handle
+        self.leftMotor=0                     #? Left motor handle
+        self.v=0                             #? Velocity (cm/s)
+        self.vMax=30                         #! Robot max velocity (cm/s)
+        self.rMax=3*self.vMax                #! Robot max rotation velocity (rad*cm/s)
+        self.L=8                             #? Base length of the robot (cm)
+        self.R=3.4                           #? Wheel radius (cm)
+        self.obst=Obstacle()                 #? Defines the robot obstacle
+        self.target=Target()                 #? Defines the robot target
+        self.pastPose=zeros(12).reshape(4,3) #? Stores the last 3 positions (x,y) and orientation => updated on execution.py
 
     #% This method calculate the distance between the robot and an object
     def dist(self,obj):
@@ -157,21 +158,17 @@ class Robot:
             self.resTM,self.teamMarkerPos=sim.simxGetObjectPosition(self.clientID,self.teamMarker,self.refPoint,opmbuffer)
             self.resIDM,self.idMarkerPos=sim.simxGetObjectPosition(self.clientID,self.IDMarker,self.refPoint,opmbuffer)
             self.xPos=100*self.centerPos[0]
-            self.yPos=100*self.centerPos[1]
-            rotM=array(((cos(-pi/4),-sin(-pi/4)),(sin(-pi/4),cos(-pi/4))))
-            mrkVec=array(((self.idMarkerPos[0]-self.teamMarkerPos[0]),(self.idMarkerPos[1]-self.teamMarkerPos[1]))).reshape(2,1)
-            headVec=100*matmul(rotM,mrkVec)
-            self.theta=arctan2(headVec[1],headVec[0])
-            #? Code to store the past Pose:
-            self.pastPose=delete(self.pastPose,0,1) #? Deleting the first column
-            self.pastPose=append(self.pastPose,array([[round(self.xPos)],[round(self.yPos)],[round(float(self.theta))]]),1) #? Updating the last Pose
-            
+            self.yPos=100*self.centerPos[1]            
 
     #% This method sets the velocity of the robot
     def simSetVel(self,v,w):
-        self.v=v
-        self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,(v+0.5*self.L*w)/self.R,opmoneshot)
-        self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,(v-0.5*self.L*w)/self.R,opmoneshot)
+        if self.face==1:
+            self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,self.face*(v+0.5*self.L*w)/self.R,opmoneshot)
+            self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,self.face*(v-0.5*self.L*w)/self.R,opmoneshot)
+        else:
+            self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,self.face*(v-0.5*self.L*w)/self.R,opmoneshot)
+            self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,self.face*(v+0.5*self.L*w)/self.R,opmoneshot)
+
 
     #% This method print a little log on console
     def showInfo(self):

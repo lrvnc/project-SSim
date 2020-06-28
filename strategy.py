@@ -104,9 +104,18 @@ class StrategyTesting:
         else:
             print('Robot not found...')
         if self.ball.simCheckConnection:
-            print('Ball ready to play!')
+            print('Ball ready to play!\n')
         else:
             print('Ball not found...')
+        self.redRob.simGetPose('infLeft_cornor')
+        self.ball.simGetPose('infLeft_cornor')
+        i=0
+        while self.redRob.xPos == 0 or self.ball.xPos == 0:
+            self.redRob.simGetPose('infLeft_cornor')
+            self.ball.simGetPose('infLeft_cornor')
+            i+=1
+        print(i,'tentativas até pegar as posições')
+
 
     def play(self):
         self.redRob.simGetPose('infLeft_cornor')
