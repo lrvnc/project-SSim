@@ -1,4 +1,4 @@
-from numpy import cos,sin,arctan2,sqrt,sign
+from numpy import cos,sin,arctan2,sqrt,sign,array,pi,matmul
 from behaviours import Univector
 
 class Controllers:
@@ -78,3 +78,45 @@ class Controllers:
         v=min(v1,v2,robot.vMax)
         w=v*phi_v+self.k_w*sign(theta_e)*sqrt(abs(theta_e))
         return v,w
+
+#% Just a litte function to calculate the rotation matrix
+def rotMatrix(self,alpha):
+    return array(((cos(alpha),-sin(alpha)),(sin(alpha),cos(alpha))))
+
+#% Idea to choose the face of the robot in behaviours.py
+#TODO Try to set a guardian with +-epsilon
+def whichFace(self,robot,target):
+    pgVec=array([[target.xPos-robot.xPos],[target.yPos-robot.yPos]]).reshape(2,1) #? Vector between the robot and the target
+
+    if robot.face==1:
+        rotM=self.rotMatrix(-pi/4)
+        mrkVec=array(((robot.idMarkerPos[0]-robot.teamMarkerPos[0]),(robot.idMarkerPos[1]-robot.teamMarkerPos[1]))).reshape(2,1)
+        headVec=100*matmul(rotM,mrkVec)
+        dotProd=headVec[0]*pgVec[0]+headVec[1]*pgVec[1] #? Dot product: if > 0 ==> -pi/2 < theta < pi/2
+        if dotProd >= 0:
+            robot.theta=arctan2(headVec[1],headVec[0])
+            robot.face=1
+        else:
+            rotM=self.rotMatrix(pi)
+            headVec=matmul(rotM,headVec)
+            robot.theta=arctan2(headVec[1],headVec[0])
+            robot.face=-1
+    else:
+        rotM=self.rotMatrix(3*pi/4)
+        mrkVec=array(((robot.idMarkerPos[0]-robot.teamMarkerPos[0]),(robot.idMarkerPos[1]-robot.teamMarkerPos[1]))).reshape(2,1)
+        headVec=100*matmul(rotM,mrkVec)
+        dotProd=headVec[0]*pgVec[0]+headVec[1]*pgVec[1] #? Dot product: if > 0 ==> -pi/2 < theta < pi/2
+        if dotProd >= 0:
+            robot.theta=arctan2(headVec[1],headVec[0])
+            robot.face=-1
+        else:
+            rotM=self.rotMatrix(pi)
+            headVec=matmul(rotM,headVec)
+            robot.theta=arctan2(headVec[1],headVec[0])
+            robot.face=1
+
+#% This is the vector field that, when called, moves the robot away from the boundaries of the football field
+#% following the target point
+def abVecField(robot,target):
+    phi=arctan2(sin(target.yPos-robot.yPos),cos(target.xPos-robot.xPos))
+    return phi

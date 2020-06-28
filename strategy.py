@@ -1,6 +1,8 @@
-from numpy import pi
+from numpy import pi,array_equal
 from simClasses import Ball,Robot,Target,Obstacle
-from execution import control
+from execution import univec
+import action
+from time import sleep
 
 class SoloFollowBall:
     def __init__(self):
@@ -24,7 +26,7 @@ class SoloFollowBall:
         self.redRob.simGetPose('infLeft_cornor')
         self.ball.simGetPose('infLeft_cornor')
         self.redRob.target.update(self.ball.xPos,self.ball.yPos,-pi/2)
-        v,w=self.ctrl.gtgN_controller(self.redRob,self.redRob.target)
+        v,w=univec(self.redRob,self.redRob.target,None,False)
         self.redRob.simSetVel(v,w)
 
 class SoloStaticObstacles:
@@ -85,5 +87,31 @@ class SoloStaticObstacles:
         self.cylinder5.simGetPose('infLeft_cornor')
         self.redRob.target.update(self.ball.xPos,self.ball.yPos,pi/2)
         self.redRob.obst.update(self.redRob,self.cylinder1,self.cylinder2,self.cylinder3,self.cylinder4,self.cylinder5)
-        v,w=control(self.redRob,self.redRob.target,self.redRob.obst,True)
+        v,w=univec(self.redRob,self.redRob.target,self.redRob.obst,True)
         self.redRob.simSetVel(v,w)
+
+class StrategyTesting:
+    def __init__(self):
+        self.ball=Ball()
+        self.redRob=Robot()
+
+    def simConnect(self,clientID):
+        self.clientID=clientID
+        self.ball.simConnect(self.clientID,'ball')
+        self.redRob.simConnect(self.clientID,'soccerRob_pos','soccerRob_teamMarker','soccerRob_IDMarker','leftMotor','rightMotor')
+        if self.redRob.simCheckConnection():
+            print('Robot ready to play!')
+        else:
+            print('Robot not found...')
+        if self.ball.simCheckConnection:
+            print('Ball ready to play!')
+        else:
+            print('Ball not found...')
+
+    def play(self):
+        self.redRob.simGetPose('infLeft_cornor')
+        self.ball.simGetPose('infLeft_cornor')
+        if self.redRob.yPos <= 20 or self.redRob.yPos >= 110 or self.redRob.xPos <= 20 or self.redRob.xPos >= 130:
+            action.avoidBound(self.redRob)
+        else:
+            action.shoot(self.redRob,self.ball,True)

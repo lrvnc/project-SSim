@@ -1,5 +1,5 @@
 from simClasses import Ball,Robot,Target
-from strategy import SoloFollowBall,SoloStaticObstacles
+from strategy import SoloFollowBall,SoloStaticObstacles,StrategyTesting
 import sim,simConst
 
 clientID=sim.simxStart('127.0.0.1',20001,True,True,5000,1)
@@ -8,7 +8,7 @@ if clientID==-1:
     exit()
 print('Server connected!')
 
-game=SoloStaticObstacles()
+game=StrategyTesting()
 game.simConnect(clientID)
 
 while True:

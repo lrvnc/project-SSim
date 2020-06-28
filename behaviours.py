@@ -56,9 +56,7 @@ class Univector:
 
     #% This is the 'N_Posture' vector field which yields us to the target position with the desired posture
     #% without avoiding any obstacle
-    def nVecField(self,robot,target):
-        n=8
-        d=2
+    def nVecField(self,robot,target,n=8,d=2):
         rx=target.xPos+d*cos(target.theta)
         ry=target.yPos+d*sin(target.theta)
         pgAng=arctan2(target.yPos-robot.yPos,target.xPos-robot.xPos)
@@ -95,11 +93,11 @@ class Univector:
 
     #% This is the composed vector field, which mix both move-to-target ('N_Posture') and avoid-obstacle vector field
     #% using a gaussian function
-    def univecField_N(self,robot,target,obst):
+    def univecField_N(self,robot,target,obst,n=8,d=2):
         d=robot.dist(obst)
         if (d <= self.d_min):
             phi=self.aoVecField(robot,obst)
         else:
             phi=self.gaussianFunc(d-self.d_min)*self.aoVecField(robot,obst)
-            phi+=(1-self.gaussianFunc(d-self.d_min))*self.nVecField(robot,target)
+            phi+=(1-self.gaussianFunc(d-self.d_min))*self.nVecField(robot,target,n,d)
         return phi
