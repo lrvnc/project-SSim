@@ -114,13 +114,10 @@ class StrategyTesting:
             self.redRob.simGetPose('infLeft_cornor')
             self.ball.simGetPose('infLeft_cornor')
             i+=1
-        print(i,'tentativas até pegar as posições')
+        print(i,'tentativas até pegar as posições\n')
 
 
     def play(self):
         self.redRob.simGetPose('infLeft_cornor')
         self.ball.simGetPose('infLeft_cornor')
-        if self.redRob.yPos <= 20 or self.redRob.yPos >= 110 or self.redRob.xPos <= 20 or self.redRob.xPos >= 130:
-            action.avoidBound(self.redRob)
-        else:
-            action.shoot(self.redRob,self.ball,True)
+        action.holdPosition(self.redRob,130,65,0)

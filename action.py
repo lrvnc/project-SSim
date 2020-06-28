@@ -40,6 +40,11 @@ def avoidBound(robot):
         v,w=univec(robot,robot.target,None,False)
         robot.simSetVel(v,w)
 
+def holdPosition(robot,xg,yg,desTheta):
+    robot.target.update(xg,yg,desTheta)
+    v,w=univec(robot,robot.target,None,False,8,2,True)
+    robot.simSetVel(v,w)
+
 #% Attacker Actions
 def shoot(robot,ball,leftSide=True):
     if leftSide:
