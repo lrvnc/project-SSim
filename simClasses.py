@@ -1,4 +1,4 @@
-from numpy import arctan2,pi,sqrt,cos,sin,array,matmul,amin,where,zeros
+from numpy import arctan2,pi,sqrt,cos,sin,array,matmul,amin,where,zeros,delete,append
 import sim,simConst
 
 #? Operation modes for API
@@ -70,6 +70,7 @@ class Ball:
         self.simStream=False
         self.xPos=0
         self.yPos=0
+        self.pastPose=zeros(4).reshape(2,2) #? Stores the last 3 positions (x,y) => updated on self.simGetPose()
 
     #% This method connects the ball with CoppeliaSim
     def simConnect(self,clientID,center):
@@ -97,6 +98,10 @@ class Ball:
             self.resC,self.centerPos=sim.simxGetObjectPosition(self.clientID,self.center,self.refPoint,opmbuffer)
             self.xPos=100*self.centerPos[0]
             self.yPos=100*self.centerPos[1]
+        
+        #% Some code to store the past position
+        self.pastPose=delete(self.pastPose,0,1) #? Deleting the first column
+        self.pastPose=append(self.pastPose,array([[round(self.xPos)],[round(self.yPos)]]),1)
 
     #% This method print a little log on console
     def showInfo(self):

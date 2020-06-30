@@ -94,30 +94,40 @@ class StrategyTesting:
     def __init__(self):
         self.ball=Ball()
         self.redRob=Robot()
+        self.greenRob=Robot()
 
     def simConnect(self,clientID):
         self.clientID=clientID
         self.ball.simConnect(self.clientID,'ball')
         self.redRob.simConnect(self.clientID,'soccerRob_pos','soccerRob_teamMarker','soccerRob_IDMarker','leftMotor','rightMotor')
+        self.greenRob.simConnect(self.clientID,'soccerRob_pos#0','soccerRob_teamMarker#0','soccerRob_IDMarker#0','leftMotor#0','rightMotor#0')
         if self.redRob.simCheckConnection():
-            print('Robot ready to play!')
+            print('RedRob ready to play!')
         else:
-            print('Robot not found...')
+            print('RedRob not found...')
+        if self.greenRob.simCheckConnection():
+            print('GreenRob ready to play!')
+        else:
+            print('GreenRob not found...')
         if self.ball.simCheckConnection:
             print('Ball ready to play!\n')
         else:
             print('Ball not found...')
         self.redRob.simGetPose('infLeft_cornor')
+        self.greenRob.simGetPose('infLeft_cornor')
         self.ball.simGetPose('infLeft_cornor')
         i=0
-        while self.redRob.xPos == 0 or self.ball.xPos == 0:
+        while self.redRob.xPos == 0 or self.ball.xPos == 0 or self.greenRob.xPos == 0:
             self.redRob.simGetPose('infLeft_cornor')
             self.ball.simGetPose('infLeft_cornor')
+            self.greenRob.simGetPose('infLeft_cornor')
             i+=1
         print(i,'tentativas até pegar as posições\n')
 
 
     def play(self):
         self.redRob.simGetPose('infLeft_cornor')
+        self.greenRob.simGetPose('infLeft_cornor')
         self.ball.simGetPose('infLeft_cornor')
-        action.holdPosition(self.redRob,130,65,0)
+        action.screenOutBall(self.redRob,self.ball,True)
+        action.shoot(self.greenRob,self.ball,False)
