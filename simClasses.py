@@ -42,17 +42,31 @@ class Obstacle:
         self.theta=theta
 
     #% This method verify which is the closest obstacle and sets it as the current obstacle to avoid
-    def update(self,robot,friend1,friend2,enemy1,enemy2,enemy3):
-        d=array([[robot.dist(friend1)],
-                 [robot.dist(friend2)],
-                 [robot.dist(enemy1)],
-                 [robot.dist(enemy2)],
-                 [robot.dist(enemy3)]])
+    def update(self,robot,friend1,friend2,enemy1=None,enemy2=None,enemy3=None):
+        if (enemy1 is None) and (enemy2 is None) and (enemy3 is None):
+            d=array([[robot.dist(friend1)],
+                     [robot.dist(friend2)]])
+        elif (enemy2 is None) and (enemy3 is None):
+            d=array([[robot.dist(friend1)],
+                     [robot.dist(friend2)],
+                     [robot.dist(enemy1) ]])
+        elif (enemy3 is None):
+            d=array([[robot.dist(friend1)],
+                     [robot.dist(friend2)],
+                     [robot.dist(enemy1) ],
+                     [robot.dist(enemy2) ]])
+        else:
+            d=array([[robot.dist(friend1)],
+                     [robot.dist(friend2)],
+                     [robot.dist(enemy1) ],
+                     [robot.dist(enemy2) ],
+                     [robot.dist(enemy3) ]])
+
         index=where(d==amin(d))
         if index[0][0]==0:
-            self.setObst(friend1.xPos,friend1.yPos,0,0)
+            self.setObst(friend1.xPos,friend1.yPos,friend1.v,friend1.theta)
         elif index[0][0]==1:
-            self.setObst(friend2.xPos,friend2.yPos,0,0)
+            self.setObst(friend2.xPos,friend2.yPos,friend2.v,friend2.theta)
         elif index[0][0]==2:
             self.setObst(enemy1.xPos,enemy1.yPos,0,0)
         elif index[0][0]==3:
@@ -117,7 +131,9 @@ class Robot:
         self.theta=0                         #? Orientation
         self.rightMotor=0                    #? Right motor handle
         self.leftMotor=0                     #? Left motor handle
-        self.v=0                             #? Velocity (cm/s)
+        self.v=0                             #? Velocity (cm/s) => updated on execution.py
+        self.vL=0                            #? Left wheel velocity (cm/s) => updated on simClasses.py -> simSetVel()
+        self.vR=0                            #? Right wheel velocity (cm/s) =>  updated on simClasses.py -> simSetVel()
         self.vMax=30                         #! Robot max velocity (cm/s)
         self.rMax=3*self.vMax                #! Robot max rotation velocity (rad*cm/s)
         self.L=8                             #? Base length of the robot (cm)
@@ -167,13 +183,14 @@ class Robot:
 
     #% This method sets the velocity of the robot
     def simSetVel(self,v,w):
+        self.vR=v+0.5*self.L*w
+        self.vL=v-0.5*self.L*w
         if self.face==1:
-            self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,self.face*(v+0.5*self.L*w)/self.R,opmoneshot)
-            self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,self.face*(v-0.5*self.L*w)/self.R,opmoneshot)
+            self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,self.face*self.vR/self.R,opmoneshot)
+            self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,self.face*self.vL/self.R,opmoneshot)
         else:
-            self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,self.face*(v-0.5*self.L*w)/self.R,opmoneshot)
-            self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,self.face*(v+0.5*self.L*w)/self.R,opmoneshot)
-
+            self.resRM=sim.simxSetJointTargetVelocity(self.clientID,self.rightMotor,self.face*self.vL/self.R,opmoneshot)
+            self.resLM=sim.simxSetJointTargetVelocity(self.clientID,self.leftMotor,self.face*self.vR/self.R,opmoneshot)
 
     #% This method print a little log on console
     def showInfo(self):

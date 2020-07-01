@@ -2,7 +2,7 @@ from numpy import cos,sin,arctan2,sqrt,sign,pi,delete,append,array
 from behaviours import Univector
 
 #% Function to approximate phi_v
-def approx(robot,target,obst=None,avoidObst=True,n=8,d=2):
+def approx(robot,target,avoidObst=True,obst=None,n=8,d=2):
     navigate=Univector() #? Defines the navigation algorithm
     dl=0.000001          #? Constant to approximate phi_v
     
@@ -22,7 +22,7 @@ def approx(robot,target,obst=None,avoidObst=True,n=8,d=2):
     return stpTheta
 
 #% Function to control the robot with or without collision avoidance
-def univec(robot,target,obst=None,avoidObst=True,n=8,d=2,stopWhenArrive=False):
+def univecController(robot,target,avoidObst=True,obst=None,n=8,d=2,stopWhenArrive=False):
     navigate=Univector() #? Defines the navigation algorithm
     dl=0.000001          #? Constant to approximate phi_v
     k_w=1                #? Feedback constant (k_w=1 means no gain)
@@ -35,7 +35,7 @@ def univec(robot,target,obst=None,avoidObst=True,n=8,d=2,stopWhenArrive=False):
     else:
         desTheta=navigate.nVecField(robot,target,n,d) #? Desired angle w/ gtg
 
-    stpTheta=approx(robot,target,obst,avoidObst,n,d)
+    stpTheta=approx(robot,target,avoidObst,obst,n,d)
     phi_v=arctan2(sin(stpTheta-desTheta),cos(stpTheta-desTheta))/dl #? Trick to mantain phi_v between [-pi,pi]
     theta_e=arctan2(sin(desTheta-robot.theta),cos(desTheta-robot.theta)) #? Trick to mantain theta_e between [-pi,pi]
     v1=(2*robot.vMax-robot.L*k_w*sqrt(abs(theta_e)))/(2+robot.L*abs(phi_v))

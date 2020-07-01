@@ -1,5 +1,5 @@
 from simClasses import Ball,Robot,Target
-from strategy import SoloFollowBall,SoloStaticObstacles,StrategyTesting
+from strategy import StrategyTesting
 import sim,simConst
 
 clientID=sim.simxStart('127.0.0.1',20001,True,True,5000,1)
