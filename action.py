@@ -54,10 +54,10 @@ def holdPosition(robot,xg,yg,desTheta,friend1=None,friend2=None):
     robot.target.update(xg,yg,desTheta)
 
     if friend1 is None and friend2 is None: #? No friends to avoid
-        v,w=univecController(robot,robot.target,avoidObst=False)
+        v,w=univecController(robot,robot.target,avoidObst=False,stopWhenArrive=True)
     else: #? Both friends to avoid
         robot.obst.update(robot,friend1,friend2)
-        v,w=univecController(robot,robot.target,True,robot.obst)
+        v,w=univecController(robot,robot.target,True,robot.obst,stopWhenArrive=True)
 
     robot.simSetVel(v,w)
 

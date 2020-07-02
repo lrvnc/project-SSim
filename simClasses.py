@@ -146,6 +146,13 @@ class Robot:
     def dist(self,obj):
         return sqrt((self.xPos-obj.xPos)**2+(self.yPos-obj.yPos)**2)
 
+    #% This method returns True if the distance between the target and the robot is less than 5cm - False otherwise
+    def arrive(self):
+        if self.dist(self.target)<=5:
+            return True
+        else:
+            return False
+
     #% This method connects the robot with CoppeliaSim
     def simConnect(self,clientID,center,teamMarker,idMarker,leftMotor,rightMotor):
         self.clientID=clientID
