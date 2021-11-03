@@ -53,12 +53,12 @@ class StrategyTesting:
         self.greenRob.simGetPose('infLeft_cornor')
         self.pinkRob.simGetPose('infLeft_cornor')
         self.ball.simGetPose('infLeft_cornor')
-        action.holdPosition(self.redRob,60,75,0,self.pinkRob,self.greenRob)
-        action.screenOutBall(self.pinkRob,self.ball,True)
+        action.blockBall(self.redRob,self.ball,True)
+        action.screenOutBall(self.pinkRob,self.ball,True,self.redRob,self.greenRob)
         if self.greenRob.yPos < 10:
             action.avoidBound(self.greenRob)
         else:
-            action.shoot(self.greenRob,self.ball,False,self.redRob,self.pinkRob)
+            action.shoot(self.greenRob,self.ball,True,self.redRob,self.pinkRob)
 
 class DrawRedDragons:
     def __init__(self):
